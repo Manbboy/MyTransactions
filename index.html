@@ -40,6 +40,21 @@ nav.tabbar button{flex:1;min-width:0;display:flex;flex-direction:column;align-it
 nav.tabbar svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 nav.tabbar button.active{color:var(--accent)}
 nav.tabbar button.active svg{stroke-width:2.2}
+header{display:none!important}
+.moremenu{position:fixed;right:max(16px,calc(50% - 270px));bottom:calc(84px + env(safe-area-inset-bottom));z-index:21;min-width:236px;background:var(--card);border:1px solid var(--line);border-radius:16px;
+  box-shadow:0 10px 30px rgba(15,27,45,.2);padding:6px;transform-origin:bottom right;animation:mmIn .16s ease}
+@keyframes mmIn{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
+.moremenu[hidden]{display:none}
+.moremenu button{display:flex;align-items:center;gap:12px;width:100%;border:0;background:none;color:var(--ink);font:inherit;font-size:15px;padding:11px 10px;border-radius:10px;cursor:pointer;text-align:left}
+.moremenu button:active{background:var(--bg)}
+.moremenu .mi{display:grid;place-items:center;color:var(--muted)} .moremenu svg{width:21px;height:21px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.moremenu .ml{flex:1}
+.moremenu .sw{width:38px;height:22px;border-radius:11px;background:var(--line);position:relative;transition:background .15s}
+.moremenu .sw::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.25);transition:transform .15s}
+:root[data-theme="dark"] .moremenu .sw{background:var(--accent)} :root[data-theme="dark"] .moremenu .sw::after{transform:translateX(16px)}
+.moremenu .mver{font-size:12px;color:var(--muted);padding:6px 10px 4px;border-top:1px solid var(--line);margin-top:4px}
+nav.tabbar #moreBtn.open{color:var(--accent)}
+body.locked .moremenu{display:none}
 body.locked nav.tabbar{transform:translateY(140%);opacity:0;pointer-events:none}
 .imptitle{font-size:18px;margin:0 0 14px}
 .boxes3{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:16px;margin-bottom:16px;align-items:start}
@@ -148,7 +163,7 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14p
 
 <!-- ===================== IMPORT (anonymiser + fusionner) ===================== -->
 <section class="tab" id="imp">
-  <h1 class="imptitle">💶 Mes transactions <span class="badge">100 % hors ligne</span> <span class="badge">v43</span></h1>
+  <h1 class="imptitle">💶 Mes transactions <span class="badge">100 % hors ligne</span> <span class="badge">v44</span></h1>
   <div class="boxes3">
   <div class="card box3">
     <h2>🔒 Anonymiser un fichier</h2>
@@ -239,7 +254,13 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14p
     <button data-tab="v-pivot"><svg viewBox="0 0 24 24"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M4 10h16M4 14.5h16M10 10v9"/></svg>Tableau</button>
     <button data-tab="v-chart"><svg viewBox="0 0 24 24"><path d="M6 20v-7M12 20V5M18 20v-10"/></svg>Graphique</button>
     <button data-tab="imp"><svg viewBox="0 0 24 24"><path d="M12 4v11m0 0l-4.5-4.5M12 15l4.5-4.5M5 19h14"/></svg>Import</button>
+    <button id="moreBtn" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>Plus</button>
   </nav>
+  <div class="moremenu" id="moreMenu" role="menu" hidden>
+    <button id="mSet" role="menuitem"><span class="mi" id="mSetIco"></span><span class="ml">Réglages de l'analyse</span></button>
+    <button id="mTheme" role="menuitemcheckbox"><span class="mi"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></span><span class="ml">Mode sombre</span><span class="sw" aria-hidden="true"></span></button>
+    <div class="mver" id="mVer"></div>
+  </div>
 
 <div class="tip" id="tip"></div>
 
@@ -295,12 +316,25 @@ function goTab(id, fromAnalysis){
   document.querySelectorAll("#tabs button").forEach(x=>x.classList.toggle("active", x.dataset.tab===id));
   const imp = id==="imp";
   $("#imp").classList.toggle("active", imp); $("#t3").classList.toggle("active", !imp);
-  $("#setBtn").style.visibility = imp? "hidden": "";
+  $("#setBtn").style.visibility = imp? "hidden": ""; if (typeof More!=="undefined") More.open(false);
   const b=document.querySelector(`#tabs button[data-tab="${id}"]`); if (b) $("#appTitle").textContent = b.textContent.trim();
   if (!fromAnalysis){ window.scrollTo(0,0); if (!imp) Ana.send({type:"view", id}); }
   setTimeout(()=>Ana.vp(), 30);
 }
-document.querySelectorAll("#tabs button").forEach(b => b.onclick = () => goTab(b.dataset.tab));
+document.querySelectorAll("#tabs button[data-tab]").forEach(b => b.onclick = () => goTab(b.dataset.tab));
+/* menu « Plus » : réglages de l'analyse, mode sombre, version */
+const More = {
+  open(on){ $("#moreMenu").hidden = !on; $("#moreBtn").classList.toggle("open", on); $("#moreBtn").setAttribute("aria-expanded", on); },
+  init(){
+    $("#mSetIco").innerHTML = $("#setBtn").innerHTML;
+    $("#mVer").textContent = "Version " + (document.querySelector("#imp .badge:last-of-type")||{}).textContent;
+    $("#moreBtn").onclick = e => { e.stopPropagation(); this.open($("#moreMenu").hidden); };
+    $("#mSet").onclick = () => { this.open(false); if ($("#imp").classList.contains("active")) goTab("v-tx"); setTimeout(()=>Ana.send({type:"open-settings"}), 60); };
+    $("#mTheme").onclick = e => { e.stopPropagation(); Theme.apply(document.documentElement.dataset.theme==="dark"? "light": "dark"); };
+    document.addEventListener("click", e => { if (!$("#moreMenu").hidden && !e.target.closest("#moreMenu")) this.open(false); });
+    addEventListener("blur", () => this.open(false));
+  }
+};
 $("#setBtn").onclick = () => Ana.send({type:"open-settings"});
 
 function setupDrop(dropSel, inputSel, onFiles){
@@ -1332,7 +1366,7 @@ const Stats = {
 };
 
 if (typeof XLSX==="undefined") document.body.insertAdjacentHTML("afterbegin",`<div class="msg bad" style="margin:10px">La bibliothèque Excel n'a pas pu être chargée.</div>`);
-Theme.init(); Anon.init(); Merge.init(); Ana.init(); CSel.init();
+Theme.init(); Anon.init(); Merge.init(); Ana.init(); CSel.init(); More.init();
 /* Version en ligne : appli installable, qui s'ouvre aussi sans connexion. Rien à faire en fichier local. */
 if (/^https?:$/.test(location.protocol) && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
