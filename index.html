@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Mes Transactions</title>
 <meta name="theme-color" content="#2563eb">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <style>
 :root{
   --bg:#f6f7f9; --card:#fff; --ink:#1d2330; --muted:#667085; --line:#e3e6eb;
@@ -143,7 +147,7 @@ details summary{cursor:pointer;color:var(--accent);font-weight:600;font-size:14p
 
 <!-- ===================== IMPORT (anonymiser + fusionner) ===================== -->
 <section class="tab" id="imp">
-  <h1 class="imptitle">💶 Mes transactions <span class="badge">100 % hors ligne</span> <span class="badge">v41</span></h1>
+  <h1 class="imptitle">💶 Mes transactions <span class="badge">100 % hors ligne</span> <span class="badge">v42</span></h1>
   <div class="boxes3">
   <div class="card box3">
     <h2>🔒 Anonymiser un fichier</h2>
@@ -1319,6 +1323,8 @@ const Stats = {
 
 if (typeof XLSX==="undefined") document.body.insertAdjacentHTML("afterbegin",`<div class="msg bad" style="margin:10px">La bibliothèque Excel n'a pas pu être chargée.</div>`);
 Theme.init(); Anon.init(); Merge.init(); Ana.init(); CSel.init();
+/* Version en ligne : appli installable, qui s'ouvre aussi sans connexion. Rien à faire en fichier local. */
+if (/^https?:$/.test(location.protocol) && "serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
 </html>
